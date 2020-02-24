@@ -11,6 +11,13 @@ namespace Game3
     {
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        Camera camera;
+
+        Player player;
+        float friction;
+        float gravity;
+
+        Texture2D tempTexture;
 
         public Game1()
         {
@@ -26,7 +33,15 @@ namespace Game3
         /// </summary>
         protected override void Initialize()
         {
-            // TODO: Add your initialization logic here
+            graphics.PreferredBackBufferWidth = 1000;
+            graphics.PreferredBackBufferHeight = 300;
+            graphics.ApplyChanges();
+
+            friction = 0.04f;
+            gravity = 0.06f;
+
+            player = new Player(new Vector2((GraphicsDevice.Viewport.Width / 2) - 200, GraphicsDevice.Viewport.Height - 64), this, friction, gravity);
+            camera = new Camera();
 
             base.Initialize();
         }
@@ -40,6 +55,7 @@ namespace Game3
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            tempTexture = Content.Load<Texture2D>("Player/Pixel");
             // TODO: use this.Content to load your game content here
         }
 
@@ -62,7 +78,8 @@ namespace Game3
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            // TODO: Add your update logic here
+            player.Update(gameTime);
+            camera.Position = new Vector2(player.X, player.Y - player.Height - 10);
 
             base.Update(gameTime);
         }
@@ -74,8 +91,19 @@ namespace Game3
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+            
+            
 
-            // TODO: Add your drawing code here
+            // spriteBatch Begin arguments from Stack Overflow post https://stackoverflow.com/questions/25145377/xna-blurred-sprites-when-scaled
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, 
+                    DepthStencilState.None, RasterizerState.CullCounterClockwise, null, camera.GetTransformation(this.GraphicsDevice));
+
+            // Draw player
+            player.Draw(spriteBatch);
+            spriteBatch.Draw(tempTexture, new Rectangle(20, 20, 10, 10), Color.Black);
+            spriteBatch.Draw(tempTexture, new Rectangle(GraphicsDevice.Viewport.Width - 30, 30, 10, 10), Color.Black);
+
+            spriteBatch.End();
 
             base.Draw(gameTime);
         }
