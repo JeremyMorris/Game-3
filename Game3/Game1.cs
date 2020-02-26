@@ -39,6 +39,8 @@ namespace Game3
         /// </summary>
         protected override void Initialize()
         {
+            Window.Title = "Go For Green";
+
             graphics.PreferredBackBufferWidth = 1000;
             graphics.PreferredBackBufferHeight = 600;
             graphics.ApplyChanges();
