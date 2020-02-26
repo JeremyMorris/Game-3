@@ -14,6 +14,11 @@ namespace Game3
         protected float _zoom;
         public Matrix Transform { get; set; }
         public Vector2 Position { get; set; }
+
+        public Viewport Viewport { get; set; }
+
+        private World _world;
+
         public float Zoom
         {
             get { return _zoom; }
@@ -21,11 +26,14 @@ namespace Game3
         }
         public float Rotation { get; set; }
 
-        public Camera()
+        public Camera(World w, Viewport v)
         {
             _zoom = 1.0f;
             Rotation = 0.0f;
             Position = Vector2.Zero;
+
+            _world = w;
+            Viewport = v;
         }
         
         public void Move(Vector2 movement)

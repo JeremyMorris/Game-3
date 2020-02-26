@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MapLibrary;
+using Microsoft.Xna.Framework.Media;
 
 namespace Game3
 {
@@ -12,12 +14,16 @@ namespace Game3
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         Camera camera;
+        World world;
+        SpriteFont font;
+        SpriteFont bigFont;
+        Song song;
+        bool songPlaying;
+        int timer;
 
         Player player;
         float friction;
         float gravity;
-
-        Texture2D tempTexture;
 
         public Game1()
         {
@@ -34,14 +40,22 @@ namespace Game3
         protected override void Initialize()
         {
             graphics.PreferredBackBufferWidth = 1000;
-            graphics.PreferredBackBufferHeight = 300;
+            graphics.PreferredBackBufferHeight = 600;
             graphics.ApplyChanges();
 
             friction = 0.04f;
             gravity = 0.06f;
+            timer = 0;
 
-            player = new Player(new Vector2((GraphicsDevice.Viewport.Width / 2) - 200, GraphicsDevice.Viewport.Height - 64), this, friction, gravity);
-            camera = new Camera();
+            world = new World(this, 2000, 800, this.Content);
+            player = new Player(new Vector2((world.Bounds.Width / 2) - 200, world.Bounds.Height - 110), this, world, friction, gravity);
+            world.Player = player;
+            world.InitializeMap(this.Content);
+            camera = new Camera(world, graphics.GraphicsDevice.Viewport);
+
+            MediaPlayer.IsRepeating = true;
+            MediaPlayer.Volume = 0.075f;
+            songPlaying = false;
 
             base.Initialize();
         }
@@ -55,8 +69,9 @@ namespace Game3
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            tempTexture = Content.Load<Texture2D>("Player/Pixel");
-            // TODO: use this.Content to load your game content here
+            font = Content.Load<SpriteFont>("RumbleBrave");
+            bigFont = Content.Load<SpriteFont>("RumbleBraveBig");
+            song = Content.Load<Song>("Game3");
         }
 
         /// <summary>
@@ -78,8 +93,30 @@ namespace Game3
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            player.Update(gameTime);
+            if (!world.GameComplete)
+            {
+                timer += gameTime.ElapsedGameTime.Milliseconds;
+            }
+
+            if (!songPlaying)
+            {
+                MediaPlayer.Play(song);
+                songPlaying = true;
+            }
+
+            world.Update(gameTime);
             camera.Position = new Vector2(player.X, player.Y - player.Height - 10);
+
+            if (Keyboard.GetState().IsKeyDown(Keys.R))
+            {
+                timer = 0;
+                player.SetX((world.Bounds.Width / 2) - 200);
+                player.SetY(world.Bounds.Height - 110);
+                world.GameComplete = false;
+                world.FlagManager.ResetFlags();
+                player.State = player.States.falling;
+            }
+
 
             base.Update(gameTime);
         }
@@ -90,18 +127,29 @@ namespace Game3
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
             
-            
-
             // spriteBatch Begin arguments from Stack Overflow post https://stackoverflow.com/questions/25145377/xna-blurred-sprites-when-scaled
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, 
                     DepthStencilState.None, RasterizerState.CullCounterClockwise, null, camera.GetTransformation(this.GraphicsDevice));
 
-            // Draw player
-            player.Draw(spriteBatch);
-            spriteBatch.Draw(tempTexture, new Rectangle(20, 20, 10, 10), Color.Black);
-            spriteBatch.Draw(tempTexture, new Rectangle(GraphicsDevice.Viewport.Width - 30, 30, 10, 10), Color.Black);
+            // Draw world
+            world.Draw(spriteBatch);
+            
+            spriteBatch.End();
+
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullCounterClockwise);
+
+            if (!world.GameComplete)
+            {
+                spriteBatch.DrawString(font, "Current Time: " + System.TimeSpan.FromMilliseconds(timer).ToString(@"m\:ss\:ff"), new Vector2(10, 15), Color.Gold);
+                spriteBatch.DrawString(font, "Flags Remaining: " + (world.FlagManager.FlagCount - world.FlagManager.CompletedCount), new Vector2(10, 40), Color.Gold);
+            } else
+            {
+                spriteBatch.DrawString(bigFont, "Game Complete!", new Vector2((graphics.GraphicsDevice.Viewport.Width / 2) - 150, (graphics.GraphicsDevice.Viewport.Height / 2) - 50), Color.SpringGreen);
+                spriteBatch.DrawString(bigFont, System.TimeSpan.FromMilliseconds(timer).ToString(@"m\:ss\:ff"), new Vector2((graphics.GraphicsDevice.Viewport.Width / 2) - 60, (graphics.GraphicsDevice.Viewport.Height / 2)), Color.SpringGreen);
+            }
 
             spriteBatch.End();
 
