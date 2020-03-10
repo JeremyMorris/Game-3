@@ -13,8 +13,8 @@ namespace MapLibrary
     {
         protected override TRead Read(ContentReader input, TRead existingInstance)
         {
-            var width = input.ReadInt32();
             var height = input.ReadInt32();
+            var width = input.ReadInt32();
             var count = width * height;
 
             // Read in the tiles - the number will vary based on the tilemap 

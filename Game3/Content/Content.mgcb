@@ -38,6 +38,11 @@
 /processorParam:TextureFormat=Color
 /build:Flags/Game3-RedFlag.png
 
+#begin game3.tmx
+/importer:TilemapImporter
+/processor:TilemapProcessor
+/build:game3.tmx;game3map.tmx
+
 #begin Game3-Background.png
 /importer:TextureImporter
 /processor:TextureProcessor

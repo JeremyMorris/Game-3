@@ -16,7 +16,7 @@ namespace ContentExtension
     /// extension, display name, and default processor for this importer.
     /// </summary>
 
-    [ContentImporter(".tmx", DisplayName = "TMX Importer - Tiled", DefaultProcessor = "TilemapProcessor - Tiled")]
+    [ContentImporter(".tmx", DisplayName = "TMX Importer - Tiled", DefaultProcessor = "TilemapProcessor")]
     public class TilemapImporter : ContentImporter<TInput>
     {
 
